@@ -18,7 +18,11 @@ https.get(url, (res) => {
             const result = list.map((item, index) => ({
                 rank: index + 1,
                 title: item.word,
-                url: "https://www.baidu.com/s?wd=" + encodeURIComponent(item.word)
+                url: "https://www.baidu.com/s?wd=" + encodeURIComponent(item.word),
+                hot: item.hotScore || item.hot || "",
+                trend: item.isNew ? "new" :
+                       item.rankChange > 0 ? "up" :
+                       item.rankChange < 0 ? "down" : ""
             }));
 
             fs.writeFileSync("hot.json", JSON.stringify(result, null, 2));
