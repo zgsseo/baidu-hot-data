@@ -1,7 +1,7 @@
 const fs = require("fs");
 const https = require("https");
 
-const url = "https://top.baidu.com/api/board?platform=wise&tab=realtime";
+const url = "https://top.baidu.com/board?tab=realtime";
 
 https.get(url, (res) => {
     let data = "";
@@ -11,24 +11,22 @@ https.get(url, (res) => {
     });
 
     res.on("end", () => {
-        try {
-            const json = JSON.parse(data);
-            const list = json.data.cards[0].content;
 
-            const result = list.map((item, index) => ({
-                rank: index + 1,
-                title: item.word,
-                url: "https://www.baidu.com/s?wd=" + encodeURIComponent(item.word),
-                hot: item.hotScore || item.hot || "",
-                trend: item.isNew ? "new" :
-                       item.rankChange > 0 ? "up" :
-                       item.rankChange < 0 ? "down" : ""
-            }));
+        // ✅ 简单正则抓取关键词
+        const matches = [...data.matchAll(/"word":"(.*?)"/g)];
 
-            fs.writeFileSync("hot.json", JSON.stringify(result, null, 2));
-            console.log("✅ 更新成功");
-        } catch (e) {
-            console.error("❌ 解析失败", e);
-        }
+        const result = matches.slice(0, 20).map((match, index) => ({
+            rank: index + 1,
+            title: match[1],
+            url: "https://www.baidu.com/s?wd=" + encodeURIComponent(match[1]),
+            hot: "",
+            trend: ""
+        }));
+
+        fs.writeFileSync("hot.json", JSON.stringify(result, null, 2));
+        console.log("✅ 更新成功");
     });
+
+}).on("error", (e) => {
+    console.error("❌ 请求失败:", e.message);
 });
